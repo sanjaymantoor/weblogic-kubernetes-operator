@@ -4,26 +4,9 @@
 
 package oracle.kubernetes.operator.helpers;
 
-import static com.meterware.simplestub.Stub.createStrictStub;
-import static oracle.kubernetes.LogMatcher.containsInfo;
-import static oracle.kubernetes.operator.VersionConstants.DEFAULT_OPERATOR_VERSION;
-import static oracle.kubernetes.operator.VersionConstants.OPERATOR_V1;
-import static oracle.kubernetes.operator.logging.MessageKeys.CREATING_CRD;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
-
 import com.meterware.simplestub.Memento;
 import io.kubernetes.client.ApiException;
-import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1beta1CustomResourceDefinition;
-import io.kubernetes.client.models.V1beta1CustomResourceDefinitionNames;
-import io.kubernetes.client.models.V1beta1CustomResourceDefinitionSpec;
-import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
+import io.kubernetes.client.models.*;
 import oracle.kubernetes.TestUtils;
 import oracle.kubernetes.operator.KubernetesConstants;
 import oracle.kubernetes.operator.LabelConstants;
@@ -31,6 +14,21 @@ import oracle.kubernetes.operator.work.Step;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+
+import static com.meterware.simplestub.Stub.createStrictStub;
+import static oracle.kubernetes.LogMatcher.containsInfo;
+import static oracle.kubernetes.operator.VersionConstants.DEFAULT_OPERATOR_VERSION;
+import static oracle.kubernetes.operator.VersionConstants.OPERATOR_V1;
+import static oracle.kubernetes.operator.logging.MessageKeys.CREATING_CRD;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class CRDHelperTest {
   private final V1beta1CustomResourceDefinition defaultCRD = defineDefaultCRD();
@@ -206,11 +204,19 @@ public class CRDHelperTest {
     }
 
     private boolean matches(V1beta1CustomResourceDefinition actualBody) {
-      return hasExpectedVersion(actualBody);
+      return hasExpectedVersion(actualBody) && hasSchemaVerification(actualBody);
     }
 
     private boolean hasExpectedVersion(V1beta1CustomResourceDefinition actualBody) {
       return expected.getSpec().getVersion().equals(actualBody.getSpec().getVersion());
+    }
+
+    private boolean hasSchemaVerification(V1beta1CustomResourceDefinition actualBody) {
+      V1beta1CustomResourceValidation validation = actualBody.getSpec().getValidation();
+      if (validation == null) return false;
+      
+      V1beta1JSONSchemaProps openAPIV3Schema = validation.getOpenAPIV3Schema();
+      return openAPIV3Schema != null && !openAPIV3Schema.getProperties().isEmpty();
     }
   }
 }
