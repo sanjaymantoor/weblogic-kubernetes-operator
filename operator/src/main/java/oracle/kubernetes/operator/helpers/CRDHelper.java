@@ -4,9 +4,12 @@
 
 package oracle.kubernetes.operator.helpers;
 
+import static oracle.kubernetes.operator.VersionConstants.DEFAULT_OPERATOR_VERSION;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import io.kubernetes.client.models.*;
+import java.util.Collections;
 import oracle.kubernetes.json.SchemaGenerator;
 import oracle.kubernetes.operator.KubernetesConstants;
 import oracle.kubernetes.operator.LabelConstants;
@@ -19,10 +22,6 @@ import oracle.kubernetes.operator.work.NextAction;
 import oracle.kubernetes.operator.work.Packet;
 import oracle.kubernetes.operator.work.Step;
 import oracle.kubernetes.weblogic.domain.v2.Domain;
-
-import java.util.Collections;
-
-import static oracle.kubernetes.operator.VersionConstants.DEFAULT_OPERATOR_VERSION;
 
 /** Helper class to ensure Domain CRD is created */
 public class CRDHelper {
