@@ -21,7 +21,7 @@ import oracle.kubernetes.operator.steps.DefaultResponseStep;
 import oracle.kubernetes.operator.work.NextAction;
 import oracle.kubernetes.operator.work.Packet;
 import oracle.kubernetes.operator.work.Step;
-import oracle.kubernetes.weblogic.domain.v2.Domain;
+import oracle.kubernetes.weblogic.domain.v2.DomainSpec;
 
 /** Helper class to ensure Domain CRD is created */
 public class CRDHelper {
@@ -101,8 +101,9 @@ public class CRDHelper {
 
     private V1beta1JSONSchemaProps createOpenAPIV3Schema() {
       Gson gson = new Gson();
-      JsonElement jsonElement = gson.toJsonTree(createSchemaGenerator().generate(Domain.class));
-      return gson.fromJson(jsonElement, V1beta1JSONSchemaProps.class);
+      JsonElement jsonElement = gson.toJsonTree(createSchemaGenerator().generate(DomainSpec.class));
+      V1beta1JSONSchemaProps spec = gson.fromJson(jsonElement, V1beta1JSONSchemaProps.class);
+      return new V1beta1JSONSchemaProps().putPropertiesItem("spec", spec);
     }
 
     private SchemaGenerator createSchemaGenerator() {
