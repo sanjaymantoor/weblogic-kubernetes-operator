@@ -4,6 +4,8 @@
 
 package oracle.kubernetes.weblogic.domain.v2;
 
+import static oracle.kubernetes.weblogic.domain.v2.ConfigurationConstants.START_IF_NEEDED;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import io.kubernetes.client.models.V1LocalObjectReference;
@@ -21,8 +23,6 @@ import oracle.kubernetes.weblogic.domain.EffectiveConfigurationFactory;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import static oracle.kubernetes.weblogic.domain.v2.ConfigurationConstants.START_IF_NEEDED;
 
 /** DomainSpec is a description of a domain. */
 public class DomainSpec extends BaseConfiguration {
