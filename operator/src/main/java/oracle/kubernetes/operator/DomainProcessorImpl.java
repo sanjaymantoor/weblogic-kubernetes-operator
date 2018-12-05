@@ -905,6 +905,9 @@ public class DomainProcessorImpl implements DomainProcessor {
             dom.getDomainUID(), dom.getMetadata().getNamespace(), null));
     resources.add(JobHelper.createDomainIntrospectorJobStep(PodHelper.createAdminPodStep(null)));
     resources.add(new BeforeAdminServiceStep(null));
+
+    resources.add(ServiceHelper.createForAdminServiceStep(null));
+
     resources.add(ServiceHelper.createForServerStep(null));
     resources.add(new WatchPodReadyAdminStep(Main.podWatchers, null));
     resources.add(new ExternalAdminChannelsStep(next));
