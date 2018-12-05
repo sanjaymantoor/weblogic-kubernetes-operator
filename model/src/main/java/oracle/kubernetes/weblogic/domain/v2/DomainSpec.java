@@ -4,8 +4,6 @@
 
 package oracle.kubernetes.weblogic.domain.v2;
 
-import static oracle.kubernetes.weblogic.domain.v2.ConfigurationConstants.START_IF_NEEDED;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import io.kubernetes.client.models.V1LocalObjectReference;
@@ -16,11 +14,15 @@ import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import oracle.kubernetes.json.Description;
+import oracle.kubernetes.json.EnumClass;
+import oracle.kubernetes.operator.ImagePullPolicy;
 import oracle.kubernetes.operator.KubernetesConstants;
 import oracle.kubernetes.weblogic.domain.EffectiveConfigurationFactory;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import static oracle.kubernetes.weblogic.domain.v2.ConfigurationConstants.START_IF_NEEDED;
 
 /** DomainSpec is a description of a domain. */
 public class DomainSpec extends BaseConfiguration {
@@ -117,11 +119,9 @@ public class DomainSpec extends BaseConfiguration {
    */
   @Description(
       "The image pull policy for the WebLogic Docker image. "
-          + ""
           + "Legal values are Always, Never and IfNotPresent. "
           + "Defaults to Always if image ends in :latest, IfNotPresent otherwise")
-  @SerializedName("imagePullPolicy")
-  @Expose
+  @EnumClass(ImagePullPolicy.class)
   private String imagePullPolicy;
 
   /**
@@ -141,8 +141,8 @@ public class DomainSpec extends BaseConfiguration {
    * The desired number of running managed servers in each WebLogic cluster that is not explicitly
    * configured in a cluster specification.
    */
-  @SerializedName("replicas")
-  @Expose
+  @Description(
+      "The number of managed servers to run in any cluster that does not specify a replica count")
   private Integer replicas;
 
   /**
@@ -150,15 +150,11 @@ public class DomainSpec extends BaseConfiguration {
    *
    * @since 2.0
    */
-  @SerializedName("domainHomeInImage")
-  @Expose
   @Description(
-      "Returns true if this domain's home is defined in the default docker image for the domain. Defaults to false")
+      "True if this domain's home is defined in the docker image for the domain. Defaults to false")
   private Boolean domainHomeInImage;
 
   /** The definition of the storage used for this domain. */
-  @SerializedName("storage")
-  @Expose
   @Description(
       "The storage used for this domain. "
           + "Defaults to a predefined claim for a PVC whose name is "
@@ -171,8 +167,6 @@ public class DomainSpec extends BaseConfiguration {
    * @since 2.0
    */
   @Description("The name of the configmap for optional WebLogic configuration overrides.")
-  @SerializedName("configOverrides")
-  @Expose
   private String configOverrides;
 
   /**
@@ -181,8 +175,6 @@ public class DomainSpec extends BaseConfiguration {
    * @since 2.0
    */
   @Description("A list of names of the secrets for optional WebLogic configuration overrides.")
-  @SerializedName("configOverrideSecrets")
-  @Expose
   private List<String> configOverrideSecrets;
 
   /**
@@ -190,8 +182,6 @@ public class DomainSpec extends BaseConfiguration {
    *
    * @since 2.0
    */
-  @SerializedName("adminServer")
-  @Expose
   @Description("Configuration for the admin server")
   private AdminServer adminServer;
 
@@ -200,8 +190,6 @@ public class DomainSpec extends BaseConfiguration {
    *
    * @since 2.0
    */
-  @SerializedName("managedServers")
-  @Expose
   @Description("Configuration for the managed servers")
   private Map<String, ManagedServer> managedServers = new HashMap<>();
 
@@ -210,8 +198,6 @@ public class DomainSpec extends BaseConfiguration {
    *
    * @since 2.0
    */
-  @SerializedName("clusters")
-  @Expose
   @Description("Configuration for the clusters")
   protected Map<String, Cluster> clusters = new HashMap<>();
 
