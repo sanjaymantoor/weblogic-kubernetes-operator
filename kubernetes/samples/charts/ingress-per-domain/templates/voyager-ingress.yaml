@@ -12,15 +12,21 @@ metadata:
     ingress.appscode.com/type: 'NodePort'
     ingress.appscode.com/stats: 'true'
     ingress.appscode.com/affinity: 'cookie'
+    ingress.appscode.com/rewrite-target: '{{ .Values.rewriteTarget }}'
+    weblogic.domainUID: {{ .Values.wlsDomain.domainUID }}
 spec:
   rules:
-  - host: '*'
+  - host: '{{ .Values.hostname }}'
     http:
       nodePort: '{{ .Values.voyager.webPort }}'
-      paths:
-      - backend:
+      - path: '{{ .Values.path }}'
+        backend:
           serviceName: '{{ .Values.wlsDomain.domainUID }}-cluster-{{ .Values.wlsDomain.clusterName | lower | replace "_" "-" }}'
           servicePort: '{{ .Values.wlsDomain.svcPort }}'
+{{- if .Values.secretName }}
+  tls:
+   - secretName: '{{ .Values.secretName }}'
+{{- end }}
 
 ---
 apiVersion: v1

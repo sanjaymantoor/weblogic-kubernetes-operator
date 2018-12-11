@@ -8,15 +8,24 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}-traefik
   namespace: {{ .Values.wlsDomain.namespace }}
-spec:
   annotations:
     kubernetes.io/ingress.class: traefik
+    ingress.kubernetes.io/rule-type: PathPrefix
+    weblogic.domainUID: {{ .Values.wlsDomain.domainUID }}
+    {{- if .Values.rewriteTarget }}
+    ingress.kubernetes.io/rewrite-target: {{ .Values.rewriteTarget }}
+    {{- end }}
+spec:
   rules:
-  - host: '{{ .Values.traefik.hostname }}'
+  - host: {{ .Values.hostname }}
     http:
       paths:
-      - path:
+      - path: {{ .Values.path }} 
         backend:
           serviceName: '{{ .Values.wlsDomain.domainUID }}-cluster-{{ .Values.wlsDomain.clusterName | lower | replace "_" "-" }}'
           servicePort: {{ .Values.wlsDomain.svcPort }}
+  {{- if .Values.secretName }}
+  tls:
+  - secretName: {{ .Values.secretName }}
+  {{- end }}
 {{- end }}

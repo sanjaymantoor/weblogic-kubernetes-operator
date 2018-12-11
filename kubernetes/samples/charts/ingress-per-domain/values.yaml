@@ -5,8 +5,20 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# Load balancer type.  Supported values are: TRAEFIK, VOYAGER
-type: TRAEFIK 
+# Load balancer type.  Supported values are: TRAEFIK, VOYAGER.
+type: TRAEFIK
+# routing type. Supported values are: HOST, PATH
+
+# hostname used by host-routing
+hostname: 
+
+# path used by path-routing
+path: 
+# rewrite target used by path-routing
+rewriteTarget:
+
+# TLS secret name
+secretName: 
 
 # WLS domain as backend to the load balancer
 wlsDomain:
@@ -14,11 +26,6 @@ wlsDomain:
   domainUID: domain1
   clusterName: cluster-1
   svcPort: 8001
-
-# Traefik specific values
-traefik:
-  # hostname used by host-routing
-  hostname: doamin1.org
 
 # Voyager specific values
 voyager:
