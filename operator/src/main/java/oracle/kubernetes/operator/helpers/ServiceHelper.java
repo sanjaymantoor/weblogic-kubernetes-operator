@@ -23,8 +23,10 @@ import io.kubernetes.client.models.V1Status;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
 import oracle.kubernetes.operator.LabelConstants;
@@ -603,29 +605,100 @@ public class ServiceHelper {
   }
 
   private static boolean validateCurrentService(V1Service build, V1Service current) {
-    V1ServiceSpec buildSpec = build.getSpec();
-    V1ServiceSpec currentSpec = current.getSpec();
-
-    if (!VersionHelper.matchesResourceVersion(
-        current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)) {
+    if (!validateServiceMetaData(build.getMetadata(), current.getMetadata())) {
       return false;
     }
-
-    String buildType = buildSpec.getType();
-    String currentType = currentSpec.getType();
-    if (currentType == null) {
-      currentType = "ClusterIP";
-    }
-    if (!currentType.equals(buildType)) {
+    if (!validateServiceSpec(build.getSpec(), current.getSpec())) {
       return false;
     }
+    return true;
+  }
 
-    List<V1ServicePort> buildPorts = buildSpec.getPorts();
-    List<V1ServicePort> currentPorts = currentSpec.getPorts();
+  private static boolean validateServiceMetaData(V1ObjectMeta build, V1ObjectMeta current) {
+    if (!VersionHelper.matchesResourceVersion(current, VersionConstants.DEFAULT_DOMAIN_VERSION)) {
+      return false;
+    }
+    if (!validateServiceLabels(build.getLabels(), current.getLabels())) {
+      return false;
+    }
+    if (!validateServiceAnnotations(build.getAnnotations(), current.getAnnotations())) {
+      return false;
+    }
+    return true;
+  }
 
+  private static boolean validateServiceLabels(
+      Map<String, String> build, Map<String, String> current) {
+    if (!propertiesEqual(build, current)) {
+      System.out.println("MOREAUT_DEBUG labels not equal\nbuild=" + build + "\ncurrent=" + current);
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean validateServiceAnnotations(
+      Map<String, String> build, Map<String, String> current) {
+    if (!propertiesEqual(build, current)) {
+      System.out.println(
+          "MOREAUT_DEBUG annotations not equal\nbuild=" + build + "\ncurrent=" + current);
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean propertiesEqual(Map<String, String> build, Map<String, String> current) {
+    Map<String, String> m1 = removeNullsFromMap(build);
+    Map<String, String> m2 = removeNullsFromMap(current);
+    if (m1.size() != m2.size()) {
+      System.out.println(
+          "MOREAUT_DEBUG properties not equal\nbuild=" + build + "\ncurrent=" + current);
+      return false;
+    }
+    for (String key : m1.keySet()) {
+      if (!Objects.equals(m1.get(key), m2.get(key))) {
+        System.out.println(
+            "MOREAUT_DEBUG properties not equal\nbuild=" + build + "\ncurrent=" + current);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static Map<String, String> removeNullsFromMap(Map<String, String> map) {
+    Map<String, String> rtn = new HashMap();
+    if (map != null) {
+      for (String key : map.keySet()) {
+        String val = map.get(key);
+        if (val != null) {
+          rtn.put(key, val);
+        }
+      }
+    }
+    return rtn;
+  }
+
+  private static boolean validateServiceSpec(V1ServiceSpec build, V1ServiceSpec current) {
+    if (!validateServiceType(build.getType(), current.getType())) {
+      return false;
+    }
+    if (!validateServicePorts(build.getType(), build.getPorts(), current.getPorts())) {
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean validateServiceType(String build, String current) {
+    if (current == null) {
+      current = "ClusterIP";
+    }
+    return current.equals(build);
+  }
+
+  private static boolean validateServicePorts(
+      String buildType, List<V1ServicePort> build, List<V1ServicePort> current) {
     outer:
-    for (V1ServicePort bp : buildPorts) {
-      for (V1ServicePort cp : currentPorts) {
+    for (V1ServicePort bp : build) {
+      for (V1ServicePort cp : current) {
         if (cp.getPort().equals(bp.getPort())) {
           if (!"NodePort".equals(buildType)
               || bp.getNodePort() == null
@@ -636,7 +709,6 @@ public class ServiceHelper {
       }
       return false;
     }
-
     return true;
   }
 
