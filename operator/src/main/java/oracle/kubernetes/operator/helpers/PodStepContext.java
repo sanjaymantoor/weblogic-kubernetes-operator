@@ -5,6 +5,7 @@
 package oracle.kubernetes.operator.helpers;
 
 import static oracle.kubernetes.operator.LabelConstants.forDomainUid;
+import static oracle.kubernetes.operator.helpers.YamlUtils.newYaml;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.models.V1ConfigMapVolumeSource;
@@ -290,54 +291,102 @@ public abstract class PodStepContext implements StepContextConstants {
   // returns fields, such as nodeName, even when export=true is specified.
   // Therefore, we'll just compare specific fields
   private static boolean isCurrentPodValid(V1Pod build, V1Pod current) {
-
-    if (!VersionHelper.matchesResourceVersion(
-        current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)) {
+    if (!isCurrentPodMetaDataValid(build.getMetadata(), current.getMetadata())) {
       return false;
     }
-
-    if (!isRestartVersionValid(build, current)) {
+    if (!isCurrentPodSpecValid(build.getSpec(), current.getSpec())) {
       return false;
     }
-
-    List<V1Container> buildContainers = build.getSpec().getContainers();
-    List<V1Container> currentContainers = current.getSpec().getContainers();
-
-    if (buildContainers != null) {
-      if (currentContainers == null) {
-        return false;
-      }
-
-      for (V1Container bc : buildContainers) {
-        V1Container fcc = getContainerWithName(currentContainers, bc.getName());
-        if (fcc == null) {
-          return false;
-        }
-        if (!fcc.getImage().equals(bc.getImage())
-            || !fcc.getImagePullPolicy().equals(bc.getImagePullPolicy())) {
-          return false;
-        }
-        if (areUnequal(fcc.getPorts(), bc.getPorts())) {
-          return false;
-        }
-        if (areUnequal(fcc.getEnv(), bc.getEnv())) {
-          return false;
-        }
-        if (areUnequal(fcc.getEnvFrom(), bc.getEnvFrom())) {
-          return false;
-        }
-      }
-    }
-
     return true;
   }
 
-  private static boolean isRestartVersionValid(V1Pod build, V1Pod current) {
-    V1ObjectMeta m1 = build.getMetadata();
-    V1ObjectMeta m2 = current.getMetadata();
-    return isLabelSame(m1, m2, LabelConstants.DOMAINRESTARTVERSION_LABEL)
-        && isLabelSame(m1, m2, LabelConstants.CLUSTERRESTARTVERSION_LABEL)
-        && isLabelSame(m1, m2, LabelConstants.SERVERRESTARTVERSION_LABEL);
+  private static boolean isCurrentPodMetaDataValid(V1ObjectMeta build, V1ObjectMeta current) {
+    if (!VersionHelper.matchesResourceVersion(current, VersionConstants.DEFAULT_DOMAIN_VERSION)) {
+      System.out.println("MOREAUT_DEBUG different domain version");
+      return false;
+    }
+    if (!isLabelSame(build, current, LabelConstants.DOMAINRESTARTVERSION_LABEL)) {
+      System.out.println("MOREAUT_DEBUG different domain restart version");
+      return false;
+    }
+    if (!isLabelSame(build, current, LabelConstants.CLUSTERRESTARTVERSION_LABEL)) {
+      System.out.println("MOREAUT_DEBUG different cluster restart version");
+      return false;
+    }
+    if (!isLabelSame(build, current, LabelConstants.SERVERRESTARTVERSION_LABEL)) {
+      System.out.println("MOREAUT_DEBUG different server restart version");
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean isCurrentPodSpecValid(V1PodSpec build, V1PodSpec current) {
+    if (areUnequalYaml(build.getVolumes(), current.getVolumes())) {
+      System.out.println("MOREAUT_DEBUG different volumes");
+      // return false;
+    }
+    if (areUnequalYaml(build.getImagePullSecrets(), current.getImagePullSecrets())) {
+      System.out.println("MOREAUT_DEBUG different image pull secrets");
+      // return false;
+    }
+    if (!areCurrentContainersValid(build.getContainers(), current.getContainers())) {
+      System.out.println("MOREAUT_DEBUG different containers");
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean areCurrentContainersValid(
+      List<V1Container> build, List<V1Container> current) {
+    if (build == current) {
+      return true;
+    } else if (build == null || current == null) {
+      return false;
+    }
+    if (build.size() != current.size()) {
+      return false;
+    }
+    for (V1Container bc : build) {
+      V1Container cc = getContainerWithName(current, bc.getName());
+      if (!isCurrentContainerValid(bc, cc)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean isCurrentContainerValid(V1Container build, V1Container current) {
+    if (build == current) {
+      return true;
+    }
+    if (build == null || current == null) {
+      return false;
+    }
+    if (!Objects.equals(build.getImage(), current.getImage())) {
+      System.out.println("MOREAUT_DEBUG different image");
+      return false;
+    }
+    if (!Objects.equals(build.getImagePullPolicy(), current.getImagePullPolicy())) {
+      System.out.println("MOREAUT_DEBUG different image pull policy");
+      return false;
+    }
+    if (areUnequal(build.getPorts(), current.getPorts())) {
+      System.out.println("MOREAUT_DEBUG different ports");
+      return false;
+    }
+    if (areUnequal(build.getEnv(), current.getEnv())) {
+      System.out.println("MOREAUT_DEBUG different env");
+      return false;
+    }
+    if (areUnequal(build.getEnvFrom(), current.getEnvFrom())) {
+      System.out.println("MOREAUT_DEBUG different env from");
+      return false;
+    }
+    if (areUnequalYaml(build.getVolumeMounts(), current.getVolumeMounts())) {
+      System.out.println("MOREAUT_DEBUG different volume mounts");
+      // return false;
+    }
+    return true;
   }
 
   private static boolean isLabelSame(V1ObjectMeta build, V1ObjectMeta current, String labelName) {
@@ -351,6 +400,43 @@ public abstract class PodStepContext implements StepContextConstants {
       }
     }
     return null;
+  }
+
+  private static <T> boolean areUnequalYaml(List<T> a, List<T> b) {
+    List<String> ay = listToYaml(a);
+    List<String> by = listToYaml(b);
+    if (a == b) {
+      return false;
+    } else if (a == null || b == null) {
+      System.out.println("\nMOREAUT_DEBUG unequal\nay=\n" + ay + "\nby=\n" + by + "\n");
+      return true;
+    }
+    if (a.size() != b.size()) {
+      System.out.println("\nMOREAUT_DEBUG unequal\nay=\n" + ay + "\nby=\n" + by + "\n");
+      return true;
+    }
+    // List<String> ay = listToYaml(a);
+    // List<String> by = listToYaml(b);
+    if (areUnequal(ay, by)) {
+      System.out.println("\nMOREAUT_DEBUG unequal\nay=\n" + ay + "\nby=\n" + by + "\n");
+      return true;
+    }
+    return false;
+  }
+
+  private static <T> List<String> listToYaml(List<T> l) {
+    if (l == null) {
+      return null;
+    }
+    List<String> yl = new ArrayList<>();
+    for (T o : l) {
+      yl.add(objectToYaml(o));
+    }
+    return yl;
+  }
+
+  private static String objectToYaml(Object o) {
+    return (o != null) ? newYaml().dump(o) : null;
   }
 
   private static <T> boolean areUnequal(List<T> a, List<T> b) {
