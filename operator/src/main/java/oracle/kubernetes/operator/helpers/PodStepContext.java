@@ -321,13 +321,21 @@ public abstract class PodStepContext implements StepContextConstants {
   }
 
   private static boolean isCurrentPodSpecValid(V1PodSpec build, V1PodSpec current) {
-    if (areUnequalYaml(build.getVolumes(), current.getVolumes())) {
-      System.out.println("MOREAUT_DEBUG different volumes");
-      // return false;
+    if (areUnequal(build.getVolumes(), current.getVolumes())) {
+      System.out.println(
+          "MOREAUT_DEBUG different volumes:\nbuild="
+              + build.getVolumes()
+              + "\ncurrent="
+              + current.getVolumes());
+      return false;
     }
-    if (areUnequalYaml(build.getImagePullSecrets(), current.getImagePullSecrets())) {
-      System.out.println("MOREAUT_DEBUG different image pull secrets");
-      // return false;
+    if (areUnequal(build.getImagePullSecrets(), current.getImagePullSecrets())) {
+      System.out.println(
+          "MOREAUT_DEBUG different image pull secrets:\nbuild="
+              + build.getImagePullSecrets()
+              + "\ncurrent="
+              + current.getImagePullSecrets());
+      return false;
     }
     if (!areCurrentContainersValid(build.getContainers(), current.getContainers())) {
       System.out.println("MOREAUT_DEBUG different containers");
@@ -382,9 +390,13 @@ public abstract class PodStepContext implements StepContextConstants {
       System.out.println("MOREAUT_DEBUG different env from");
       return false;
     }
-    if (areUnequalYaml(build.getVolumeMounts(), current.getVolumeMounts())) {
-      System.out.println("MOREAUT_DEBUG different volume mounts");
-      // return false;
+    if (areUnequal(build.getVolumeMounts(), current.getVolumeMounts())) {
+      System.out.println(
+          "MOREAUT_DEBUG different volumes mounts:\nbuild="
+              + build.getVolumeMounts()
+              + "\ncurrent="
+              + current.getVolumeMounts());
+      return false;
     }
     return true;
   }
