@@ -495,6 +495,23 @@ public abstract class PodHelperTestBase {
     verifyReplacePodWhen(pod -> {});
   }
 
+  @Test
+  public void whenPodRequestRequirementIsDifferent_replaceIt() {
+    configurator.withRequestRequirement("resource", "5");
+    verifyReplacePodWhen(pod -> {});
+  }
+
+  @Test
+  public void whenPodRequestRequirementsEmptyVsNull_dontReplaceIt() {
+    verifyPodNotReplacedWhen(pod -> pod.getSpec().getContainers().get(0).resources(null));
+  }
+
+  @Test
+  public void whenPodLimitRequirementIsDifferent_replaceIt() {
+    configurator.withLimitRequirement("limit", "7");
+    verifyReplacePodWhen(pod -> {});
+  }
+
   protected void onAdminExpectListPersistentVolume() {
     // default is no-op
   }

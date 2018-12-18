@@ -8,6 +8,7 @@ import static oracle.kubernetes.operator.LabelConstants.forDomainUid;
 import static oracle.kubernetes.operator.VersionConstants.DEFAULT_DOMAIN_VERSION;
 
 import io.kubernetes.client.custom.IntOrString;
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.*;
 import java.io.File;
 import java.util.*;
@@ -293,7 +294,7 @@ public abstract class PodStepContext implements StepContextConstants {
         && areCompatible(build.getContainers(), current.getContainers(), ignoring);
   }
 
-  private static boolean mapEquals(Map<String, String> first, Map<String, String> second) {
+  private static <K, V> boolean mapEquals(Map<K, V> first, Map<K, V> second) {
     return Objects.equals(first, second) || (MapUtils.isEmpty(first) && MapUtils.isEmpty(second));
   }
 
@@ -328,6 +329,7 @@ public abstract class PodStepContext implements StepContextConstants {
         && Objects.equals(current.getSecurityContext(), build.getSecurityContext())
         && equalSettings(current.getLivenessProbe(), build.getLivenessProbe())
         && equalSettings(current.getReadinessProbe(), build.getReadinessProbe())
+        && resourcesEqual(current.getResources(), build.getResources())
         && equalSets(mountsWithout(current.getVolumeMounts(), ignoring), build.getVolumeMounts())
         && equalSets(current.getPorts(), build.getPorts())
         && equalSets(current.getEnv(), build.getEnv())
@@ -338,6 +340,18 @@ public abstract class PodStepContext implements StepContextConstants {
     return Objects.equals(probe1.getInitialDelaySeconds(), probe2.getInitialDelaySeconds())
         && Objects.equals(probe1.getTimeoutSeconds(), probe2.getTimeoutSeconds())
         && Objects.equals(probe1.getPeriodSeconds(), probe2.getPeriodSeconds());
+  }
+
+  private static boolean resourcesEqual(V1ResourceRequirements a, V1ResourceRequirements b) {
+    return mapEquals(getLimits(a), getLimits(b)) && mapEquals(getRequests(a), getRequests(b));
+  }
+
+  private static Map<String, Quantity> getLimits(V1ResourceRequirements requirements) {
+    return requirements == null ? Collections.emptyMap() : requirements.getLimits();
+  }
+
+  private static Map<String, Quantity> getRequests(V1ResourceRequirements requirements) {
+    return requirements == null ? Collections.emptyMap() : requirements.getRequests();
   }
 
   private static List<V1Volume> volumesWithout(
