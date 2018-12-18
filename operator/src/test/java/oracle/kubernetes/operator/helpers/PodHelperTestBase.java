@@ -465,6 +465,7 @@ public abstract class PodHelperTestBase {
   }
 
   @Test
+  @Ignore("can't change on node selector")
   public void whenPodHasDifferentNodeSelector_replaceIt() {
     configurator.withNodeSelector("key", "value");
     verifyReplacePodWhen(pod -> {});

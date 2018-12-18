@@ -286,7 +286,7 @@ public abstract class PodStepContext implements StepContextConstants {
   private static boolean isCurrentPodSpecValid(
       V1PodSpec build, V1PodSpec current, List<String> ignoring) {
     return Objects.equals(current.getSecurityContext(), build.getSecurityContext())
-        && Objects.equals(current.getNodeSelector(), build.getNodeSelector())
+        //        && Objects.equals(current.getNodeSelector(), build.getNodeSelector())
         && equalSets(volumesWithout(current.getVolumes(), ignoring), build.getVolumes())
         && equalSets(current.getImagePullSecrets(), build.getImagePullSecrets())
         && areCompatible(build.getContainers(), current.getContainers(), ignoring);
