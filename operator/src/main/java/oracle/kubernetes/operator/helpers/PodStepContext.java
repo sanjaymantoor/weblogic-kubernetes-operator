@@ -5,6 +5,7 @@
 package oracle.kubernetes.operator.helpers;
 
 import static oracle.kubernetes.operator.LabelConstants.forDomainUid;
+import static oracle.kubernetes.operator.VersionConstants.DEFAULT_DOMAIN_VERSION;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.models.*;
@@ -270,19 +271,16 @@ public abstract class PodStepContext implements StepContextConstants {
   // Therefore, we'll just compare specific fields
   private static boolean isCurrentPodValid(V1Pod build, V1Pod current) {
     List<String> ignoring = getVolumesToIgnore(current);
-    if (currentPodMetadataNotValid(build, current)) return false;
+    if (!isCurrentPodMetadataValid(build.getMetadata(), current.getMetadata())) return false;
 
     return isCurrentPodSpecValid(build.getSpec(), current.getSpec(), ignoring);
   }
 
-  private static boolean currentPodMetadataNotValid(V1Pod build, V1Pod current) {
-    return !VersionHelper.matchesResourceVersion(
-            current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)
-        || !isRestartVersionValid(build.getMetadata(), current.getMetadata())
-        || !Objects.equals(
-            getCustomerLabels(current.getMetadata()), getCustomerLabels(build.getMetadata()))
-        || !Objects.equals(
-            current.getMetadata().getAnnotations(), build.getMetadata().getAnnotations());
+  private static boolean isCurrentPodMetadataValid(V1ObjectMeta build, V1ObjectMeta current) {
+    return VersionHelper.matchesResourceVersion(current, DEFAULT_DOMAIN_VERSION)
+        && isRestartVersionValid(build, current)
+        && Objects.equals(getCustomerLabels(current), getCustomerLabels(build))
+        && Objects.equals(current.getAnnotations(), build.getAnnotations());
   }
 
   private static boolean isCurrentPodSpecValid(
@@ -603,8 +601,7 @@ public abstract class PodStepContext implements StepContextConstants {
     // Add internal labels. This will overwrite any custom labels that conflict with internal
     // labels.
     metadata
-        .putLabelsItem(
-            LabelConstants.RESOURCE_VERSION_LABEL, VersionConstants.DEFAULT_DOMAIN_VERSION)
+        .putLabelsItem(LabelConstants.RESOURCE_VERSION_LABEL, DEFAULT_DOMAIN_VERSION)
         .putLabelsItem(LabelConstants.DOMAINUID_LABEL, getDomainUID())
         .putLabelsItem(LabelConstants.DOMAINNAME_LABEL, getDomainName())
         .putLabelsItem(LabelConstants.SERVERNAME_LABEL, getServerName())
