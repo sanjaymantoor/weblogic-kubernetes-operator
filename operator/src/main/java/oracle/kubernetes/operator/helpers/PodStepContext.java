@@ -270,49 +270,37 @@ public abstract class PodStepContext implements StepContextConstants {
   // Therefore, we'll just compare specific fields
   private static boolean isCurrentPodValid(V1Pod build, V1Pod current) {
     List<String> ignoring = getVolumesToIgnore(current);
-    if (!VersionHelper.matchesResourceVersion(
-        current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)) {
-      return false;
-    }
+    if (currentPodMetadataNotValid(build, current)) return false;
 
-    if (!isRestartVersionValid(build, current)) return false;
+    return isCurrentPodSpecValid(build.getSpec(), current.getSpec(), ignoring);
+  }
 
-    if (areUnequal(getCustomerLabels(current), getCustomerLabels(build))) return false;
-
-    if (areUnequal(current.getMetadata().getAnnotations(), build.getMetadata().getAnnotations()))
-      return false;
-
-    V1PodSpec currentSpec = current.getSpec();
-    V1PodSpec buildSpec = build.getSpec();
-    return isCurrentPodSpecValid(buildSpec, currentSpec, ignoring);
+  private static boolean currentPodMetadataNotValid(V1Pod build, V1Pod current) {
+    return !VersionHelper.matchesResourceVersion(
+            current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)
+        || !isRestartVersionValid(build.getMetadata(), current.getMetadata())
+        || !Objects.equals(
+            getCustomerLabels(current.getMetadata()), getCustomerLabels(build.getMetadata()))
+        || !Objects.equals(
+            current.getMetadata().getAnnotations(), build.getMetadata().getAnnotations());
   }
 
   private static boolean isCurrentPodSpecValid(
-      V1PodSpec buildSpec, V1PodSpec currentSpec, List<String> ignoring) {
-    if (!Objects.equals(currentSpec.getSecurityContext(), buildSpec.getSecurityContext()))
-      return false;
-
-    //    if (!Objects.equals(currentSpec.getNodeSelector(), buildSpec.getNodeSelector()))
-    //      return false;
-
-    if (!equalSets(volumesWithout(currentSpec.getVolumes(), ignoring), buildSpec.getVolumes()))
-      return false;
-
-    if (!equalSets(currentSpec.getImagePullSecrets(), buildSpec.getImagePullSecrets()))
-      return false;
-
-    return areCompatible(buildSpec.getContainers(), currentSpec.getContainers(), ignoring);
+      V1PodSpec build, V1PodSpec current, List<String> ignoring) {
+    return Objects.equals(current.getSecurityContext(), build.getSecurityContext())
+        //  && Objects.equals(current.getNodeSelector(), build.getNodeSelector())
+        && equalSets(volumesWithout(current.getVolumes(), ignoring), build.getVolumes())
+        && equalSets(current.getImagePullSecrets(), build.getImagePullSecrets())
+        && areCompatible(build.getContainers(), current.getContainers(), ignoring);
   }
 
   private static boolean areCompatible(
-      List<V1Container> buildContainers,
-      List<V1Container> currentContainers,
-      List<String> ignoring) {
-    if (buildContainers != null) {
-      if (currentContainers == null) return false;
+      List<V1Container> build, List<V1Container> current, List<String> ignoring) {
+    if (build != null) {
+      if (current == null) return false;
 
-      for (V1Container bc : buildContainers) {
-        V1Container fcc = getContainerWithName(currentContainers, bc.getName());
+      for (V1Container bc : build) {
+        V1Container fcc = getContainerWithName(current, bc.getName());
         if (fcc == null || !isCompatible(bc, fcc, ignoring)) {
           return false;
         }
@@ -376,9 +364,9 @@ public abstract class PodStepContext implements StepContextConstants {
     return Optional.ofNullable(container.getVolumeMounts()).orElse(Collections.emptyList());
   }
 
-  private static Map<String, String> getCustomerLabels(V1Pod pod) {
+  private static Map<String, String> getCustomerLabels(V1ObjectMeta metadata) {
     Map<String, String> result = new HashMap<>();
-    for (Map.Entry<String, String> entry : pod.getMetadata().getLabels().entrySet())
+    for (Map.Entry<String, String> entry : metadata.getLabels().entrySet())
       if (!isOperatorLabel(entry)) result.put(entry.getKey(), entry.getValue());
     return result;
   }
@@ -387,12 +375,10 @@ public abstract class PodStepContext implements StepContextConstants {
     return label.getKey().startsWith("weblogic.");
   }
 
-  private static boolean isRestartVersionValid(V1Pod build, V1Pod current) {
-    V1ObjectMeta m1 = build.getMetadata();
-    V1ObjectMeta m2 = current.getMetadata();
-    return isLabelSame(m1, m2, LabelConstants.DOMAINRESTARTVERSION_LABEL)
-        && isLabelSame(m1, m2, LabelConstants.CLUSTERRESTARTVERSION_LABEL)
-        && isLabelSame(m1, m2, LabelConstants.SERVERRESTARTVERSION_LABEL);
+  private static boolean isRestartVersionValid(V1ObjectMeta build, V1ObjectMeta current) {
+    return isLabelSame(build, current, LabelConstants.DOMAINRESTARTVERSION_LABEL)
+        && isLabelSame(build, current, LabelConstants.CLUSTERRESTARTVERSION_LABEL)
+        && isLabelSame(build, current, LabelConstants.SERVERRESTARTVERSION_LABEL);
   }
 
   private static boolean isLabelSame(V1ObjectMeta build, V1ObjectMeta current, String labelName) {
