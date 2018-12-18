@@ -271,32 +271,48 @@ public abstract class PodStepContext implements StepContextConstants {
   private static boolean isCurrentPodValid(V1Pod build, V1Pod current) {
     List<String> ignoring = getVolumesToIgnore(current);
     if (!VersionHelper.matchesResourceVersion(
-            current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)
-        || !isRestartVersionValid(build, current)
-        || !Objects.equals(getCustomerLabels(current), getCustomerLabels(build))
-        || !Objects.equals(
-            current.getMetadata().getAnnotations(), build.getMetadata().getAnnotations()))
+        current.getMetadata(), VersionConstants.DEFAULT_DOMAIN_VERSION)) {
+      return false;
+    }
+
+    if (!isRestartVersionValid(build, current)) return false;
+
+    if (areUnequal(getCustomerLabels(current), getCustomerLabels(build))) return false;
+
+    if (areUnequal(current.getMetadata().getAnnotations(), build.getMetadata().getAnnotations()))
       return false;
 
-    return isCurrentPodSpecValid(build.getSpec(), current.getSpec(), ignoring);
+    V1PodSpec currentSpec = current.getSpec();
+    V1PodSpec buildSpec = build.getSpec();
+    return isCurrentPodSpecValid(buildSpec, currentSpec, ignoring);
   }
 
   private static boolean isCurrentPodSpecValid(
-      V1PodSpec build, V1PodSpec current, List<String> ignoring) {
-    return Objects.equals(current.getSecurityContext(), build.getSecurityContext())
-        //    && Objects.equals(current.getNodeSelector(), build.getNodeSelector())
-        && equalSets(volumesWithout(current.getVolumes(), ignoring), build.getVolumes())
-        && equalSets(current.getImagePullSecrets(), build.getImagePullSecrets())
-        && areCompatible(build.getContainers(), current.getContainers(), ignoring);
+      V1PodSpec buildSpec, V1PodSpec currentSpec, List<String> ignoring) {
+    if (!Objects.equals(currentSpec.getSecurityContext(), buildSpec.getSecurityContext()))
+      return false;
+
+    //    if (!Objects.equals(currentSpec.getNodeSelector(), buildSpec.getNodeSelector()))
+    //      return false;
+
+    if (!equalSets(volumesWithout(currentSpec.getVolumes(), ignoring), buildSpec.getVolumes()))
+      return false;
+
+    if (!equalSets(currentSpec.getImagePullSecrets(), buildSpec.getImagePullSecrets()))
+      return false;
+
+    return areCompatible(buildSpec.getContainers(), currentSpec.getContainers(), ignoring);
   }
 
   private static boolean areCompatible(
-      List<V1Container> build, List<V1Container> current, List<String> ignoring) {
-    if (build != null) {
-      if (current == null) return false;
+      List<V1Container> buildContainers,
+      List<V1Container> currentContainers,
+      List<String> ignoring) {
+    if (buildContainers != null) {
+      if (currentContainers == null) return false;
 
-      for (V1Container bc : build) {
-        V1Container fcc = getContainerWithName(current, bc.getName());
+      for (V1Container bc : buildContainers) {
+        V1Container fcc = getContainerWithName(currentContainers, bc.getName());
         if (fcc == null || !isCompatible(bc, fcc, ignoring)) {
           return false;
         }
