@@ -318,12 +318,23 @@ public abstract class PodStepContext implements StepContextConstants {
    */
   private static boolean isCompatible(
       V1Container build, V1Container current, List<String> ignoring) {
+    if (!Objects.equals(current.getResources(), build.getResources())) return false;
     return current.getImage().equals(build.getImage())
         && current.getImagePullPolicy().equals(build.getImagePullPolicy())
+        && Objects.equals(current.getSecurityContext(), build.getSecurityContext())
+        && Objects.equals(current.getResources(), build.getResources())
+        && equalSettings(current.getLivenessProbe(), build.getLivenessProbe())
+        && equalSettings(current.getReadinessProbe(), build.getReadinessProbe())
         && equalSets(mountsWithout(current.getVolumeMounts(), ignoring), build.getVolumeMounts())
         && equalSets(current.getPorts(), build.getPorts())
         && equalSets(current.getEnv(), build.getEnv())
         && equalSets(current.getEnvFrom(), build.getEnvFrom());
+  }
+
+  private static boolean equalSettings(V1Probe probe1, V1Probe probe2) {
+    return Objects.equals(probe1.getInitialDelaySeconds(), probe2.getInitialDelaySeconds())
+        && Objects.equals(probe1.getTimeoutSeconds(), probe2.getTimeoutSeconds())
+        && Objects.equals(probe1.getPeriodSeconds(), probe2.getPeriodSeconds());
   }
 
   private static List<V1Volume> volumesWithout(
