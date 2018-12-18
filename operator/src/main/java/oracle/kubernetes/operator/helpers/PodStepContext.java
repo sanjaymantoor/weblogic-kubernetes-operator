@@ -23,6 +23,7 @@ import oracle.kubernetes.operator.work.Packet;
 import oracle.kubernetes.operator.work.Step;
 import oracle.kubernetes.weblogic.domain.v2.Domain;
 import oracle.kubernetes.weblogic.domain.v2.ServerSpec;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SuppressWarnings("deprecation")
@@ -279,17 +280,21 @@ public abstract class PodStepContext implements StepContextConstants {
   private static boolean isCurrentPodMetadataValid(V1ObjectMeta build, V1ObjectMeta current) {
     return VersionHelper.matchesResourceVersion(current, DEFAULT_DOMAIN_VERSION)
         && isRestartVersionValid(build, current)
-        && Objects.equals(getCustomerLabels(current), getCustomerLabels(build))
-        && Objects.equals(current.getAnnotations(), build.getAnnotations());
+        && mapEquals(getCustomerLabels(current), getCustomerLabels(build))
+        && mapEquals(current.getAnnotations(), build.getAnnotations());
   }
 
   private static boolean isCurrentPodSpecValid(
       V1PodSpec build, V1PodSpec current, List<String> ignoring) {
     return Objects.equals(current.getSecurityContext(), build.getSecurityContext())
-        //  && Objects.equals(current.getNodeSelector(), build.getNodeSelector())
+        && mapEquals(current.getNodeSelector(), build.getNodeSelector())
         && equalSets(volumesWithout(current.getVolumes(), ignoring), build.getVolumes())
         && equalSets(current.getImagePullSecrets(), build.getImagePullSecrets())
         && areCompatible(build.getContainers(), current.getContainers(), ignoring);
+  }
+
+  private static boolean mapEquals(Map<String, String> first, Map<String, String> second) {
+    return Objects.equals(first, second) || (MapUtils.isEmpty(first) && MapUtils.isEmpty(second));
   }
 
   private static boolean areCompatible(

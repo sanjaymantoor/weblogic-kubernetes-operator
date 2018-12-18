@@ -305,6 +305,8 @@ public abstract class PodHelperTestBase {
 
   protected abstract void verifyReplacePodWhen(PodMutator mutator);
 
+  protected abstract void verifyPodNotReplacedWhen(PodMutator mutator);
+
   protected abstract ServerConfigurator getServerConfigurator(
       DomainConfigurator configurator, String serverName);
 
@@ -465,10 +467,14 @@ public abstract class PodHelperTestBase {
   }
 
   @Test
-  @Ignore
-  public void whenPodHasDifferentNodeSelector_dontReplaceIt() {
+  public void whenPodHasDifferentNodeSelector_replaceIt() {
     configurator.withNodeSelector("key", "value");
     verifyReplacePodWhen(pod -> {});
+  }
+
+  @Test
+  public void whenNullVsEmptyNodeSelector_dontReplaceIt() {
+    verifyPodNotReplacedWhen(pod -> pod.getSpec().setNodeSelector(null));
   }
 
   @Test
