@@ -79,8 +79,6 @@ public abstract class PodHelperTestBase {
   private static final String NODEMGR_HOME = "/u01/nodemanager";
   private static final String CONFIGMAP_VOLUME_NAME = "weblogic-domain-cm-volume";
   private static final int READ_AND_EXECUTE_MODE = 0555;
-  private static final Map<String, String> NODE_SELECTOR =
-      Collections.singletonMap("labelKey", "labelValue");
 
   final TerminalStep terminalStep = new TerminalStep();
   private final Domain domain = createDomain();
@@ -467,8 +465,8 @@ public abstract class PodHelperTestBase {
   }
 
   @Test
-  @Ignore("can't change on node selector")
-  public void whenPodHasDifferentNodeSelector_replaceIt() {
+  @Ignore
+  public void whenPodHasDifferentNodeSelector_dontReplaceIt() {
     configurator.withNodeSelector("key", "value");
     verifyReplacePodWhen(pod -> {});
   }
