@@ -153,7 +153,7 @@ domain namespace (`sample-domains-ns1`) and the base image (`oracle/weblogic:122
 
 For example, assuming you named your copy `my-inputs.yaml`:
 ```
-$ cd kubernetes/samples/scripts/create-weblogic-domain/domain-home-on-pv
+$ cd kubernetes/samples/scripts/create-weblogic-domain/domain-home-in-image
 $ ./create-domain.sh -i my-inputs.yaml -o /some/output/directory -e -v
 ```
 
