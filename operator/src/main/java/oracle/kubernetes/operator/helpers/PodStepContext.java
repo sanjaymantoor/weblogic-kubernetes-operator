@@ -271,9 +271,9 @@ public abstract class PodStepContext implements StepContextConstants {
   // Therefore, we'll just compare specific fields
   private static boolean isCurrentPodValid(V1Pod build, V1Pod current) {
     List<String> ignoring = getVolumesToIgnore(current);
-    if (!isCurrentPodMetadataValid(build.getMetadata(), current.getMetadata())) return false;
 
-    return isCurrentPodSpecValid(build.getSpec(), current.getSpec(), ignoring);
+    return isCurrentPodMetadataValid(build.getMetadata(), current.getMetadata())
+        && isCurrentPodSpecValid(build.getSpec(), current.getSpec(), ignoring);
   }
 
   private static boolean isCurrentPodMetadataValid(V1ObjectMeta build, V1ObjectMeta current) {
@@ -399,35 +399,6 @@ public abstract class PodStepContext implements StepContextConstants {
 
   private static <T> Set<T> asSet(List<T> first) {
     return (first == null) ? Collections.emptySet() : new HashSet<>(first);
-  }
-
-  private static <T> boolean areUnequal(List<T> a, List<T> b) {
-    if (a == b) {
-      return false;
-    }
-
-    if (a == null) a = Collections.emptyList();
-    if (b == null) b = Collections.emptyList();
-
-    if (a.size() != b.size()) {
-      return true;
-    }
-
-    List<T> bprime = new ArrayList<>(b);
-    for (T at : a) {
-      if (!bprime.remove(at)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static <K, V> boolean areUnequal(Map<K, V> a, Map<K, V> b) {
-    return !emptyIfNull(a).equals(emptyIfNull(b));
-  }
-
-  private static <K, V> Map<K, V> emptyIfNull(Map<K, V> map) {
-    return map != null ? map : Collections.emptyMap();
   }
 
   private class VerifyPodStep extends Step {
