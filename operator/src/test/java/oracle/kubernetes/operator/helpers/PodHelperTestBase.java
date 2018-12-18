@@ -489,18 +489,6 @@ public abstract class PodHelperTestBase {
     verifyReplacePodWhen(pod -> {});
   }
 
-  @Test
-  public void whenPodRequestRequirementIsDifferent_replaceIt() {
-    configurator.withRequestRequirement("resource", "5");
-    verifyReplacePodWhen(pod -> {});
-  }
-
-  @Test
-  public void whenPodLimitRequirementIsDifferent_replaceIt() {
-    configurator.withLimitRequirement("limit", "7");
-    verifyReplacePodWhen(pod -> {});
-  }
-
   protected void onAdminExpectListPersistentVolume() {
     // default is no-op
   }
@@ -596,7 +584,6 @@ public abstract class PodHelperTestBase {
         .securityContext(new V1SecurityContext())
         .addPortsItem(new V1ContainerPort().protocol("TCP").containerPort(listenPort))
         .lifecycle(createLifecycle())
-        .resources(createEmptyResourceRequirements())
         .volumeMounts(PodDefaults.getStandardVolumeMounts(UID))
         .command(createStartCommand())
         .addEnvItem(envItem("DOMAIN_NAME", DOMAIN_NAME))
@@ -614,12 +601,6 @@ public abstract class PodHelperTestBase {
         .addEnvItem(envItem("AS_SERVICE_NAME", LegalNames.toServerServiceName(UID, ADMIN_SERVER)))
         .livenessProbe(createLivenessProbe())
         .readinessProbe(createReadinessProbe());
-  }
-
-  private V1ResourceRequirements createEmptyResourceRequirements() {
-    return new V1ResourceRequirements()
-        .limits(Collections.emptyMap())
-        .requests(Collections.emptyMap());
   }
 
   V1PodSpec createPodSpec() {
