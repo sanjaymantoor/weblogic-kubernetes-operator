@@ -217,13 +217,7 @@ function getKubernetesClusterIP {
 #
 function createDomainResource {
   kubectl apply -f ${dcrOutput}
-
-  attempts=0
-  while [ "$DCR_AVAIL" != "1" ] && [ ! $attempts -eq 10 ]; do
-    attempts=$((attempts + 1))
-    sleep 1
-    DCR_AVAIL=`kubectl get domain ${domainUID} -n ${namespace} | grep ${domainUID} | wc | awk ' { print $1; } '`
-  done
+  DCR_AVAIL=`kubectl get domain -n ${namespace} | grep ${domainUID} | wc | awk ' { print $1; } '`
   if [ "${DCR_AVAIL}" != "1" ]; then
     fail "The domain resource ${domainUID} was not found"
   fi

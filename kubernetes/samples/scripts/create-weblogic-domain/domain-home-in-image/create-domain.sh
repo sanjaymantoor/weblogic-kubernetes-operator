@@ -249,18 +249,14 @@ function createDomainHome {
 
   cp ${domainPropertiesOutput} ./docker-images/OracleWebLogic/samples/${imagePath}/properties/docker_build
 
-  imageName="12213-domain-home-in-image"
+  imageName="12213-domain-home-in-image:latest"
   # use the existence of build-archive.sh file to determine if we need to download WDT
   if [ -f "./docker-images/OracleWebLogic/samples/${imagePath}/build-archive.sh" ]; then
-    imageName="12213-domain-wdt"
+    imageName="12213-domain-wdt:latest"
   fi
 
   # now we know which image to use, update the domain yaml file
-  if [ -z $image ]; then
-    sed -i -e "s|%IMAGE_NAME%|${imageName}|g" ${dcrOutput}
-  else
-    sed -i -e "s|%IMAGE_NAME%|${image}|g" ${dcrOutput}
-  fi
+  sed -i -e "s|%IMAGE_NAME%|${imageName}|g" ${dcrOutput}
 
   cd docker-images/OracleWebLogic/samples/${imagePath}
 
