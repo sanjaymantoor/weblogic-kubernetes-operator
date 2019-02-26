@@ -68,6 +68,6 @@ cp /operator/logstash.conf /logs/logstash.conf
 HEAP="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -XshowSettings:vm"
 
 # Start operator
-java $HEAP $MOCKING_WLS $DEBUG $LOGGING -jar /operator/weblogic-kubernetes-operator.jar &
+java $HEAP $MOCKING_WLS $DEBUG $LOGGING -Djavax.net.debug=all -jar /operator/weblogic-kubernetes-operator.jar &
 PID=$!
 wait $PID
