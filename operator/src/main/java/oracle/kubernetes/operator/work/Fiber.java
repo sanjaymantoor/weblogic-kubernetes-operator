@@ -821,7 +821,7 @@ public final class Fiber implements Runnable, Future<Void>, ComponentRegistry {
     }
   }
 
-  private synchronized void writeBreadCrumb(StringBuilder sb) {
+  synchronized void writeBreadCrumb(StringBuilder sb) {
     if (breadCrumbs != null) {
       sb.append('[');
       Iterator<BreadCrumb> it = breadCrumbs.iterator();

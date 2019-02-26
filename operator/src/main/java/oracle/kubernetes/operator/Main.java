@@ -570,6 +570,15 @@ public class Main {
       if (callResponse.getResult() != null) {
         for (Domain dom : callResponse.getResult().getItems()) {
           String domainUID = dom.getDomainUID();
+
+          // OpenShift TEST
+          // validate that periodic recheck is detecting domains
+          LOGGER.severe(
+              "OpenShift Testing: Domain list, domainUID: "
+                  + domainUID
+                  + ", resourceVersion: "
+                  + dom.getMetadata().getResourceVersion());
+
           domainUIDs.add(domainUID);
           DomainPresenceInfo info =
               dpis.compute(

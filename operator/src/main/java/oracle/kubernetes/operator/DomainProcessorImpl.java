@@ -641,6 +641,17 @@ public class DomainProcessorImpl implements DomainProcessor {
           // Is this an outdated watch event?
           if (domain != null && isOutdated(current.getMetadata(), domain.getMetadata())) {
             LOGGER.fine(MessageKeys.NOT_STARTING_DOMAINUID_THREAD, domainUID);
+
+            // OpenShift TEST
+            // validate outdated check
+            LOGGER.severe(
+                "OpenShift Testing: Domain is *outdated*, domainUID: "
+                    + domainUID
+                    + ", resourceVersion: "
+                    + domain.getMetadata().getResourceVersion()
+                    + ", current: "
+                    + current.getMetadata().getResourceVersion());
+
             return;
           }
           // Has the spec actually changed? We will get watch events for status updates
@@ -648,6 +659,17 @@ public class DomainProcessorImpl implements DomainProcessor {
             // nothing in the spec has changed, but status likely did; update current
             existing.setDomain(domain);
             LOGGER.fine(MessageKeys.NOT_STARTING_DOMAINUID_THREAD, domainUID);
+
+            // OpenShift TEST
+            // validate spec not changed check
+            LOGGER.severe(
+                "OpenShift Testing: Domain spec *not changed*, domainUID: "
+                    + domainUID
+                    + ", spec: "
+                    + spec
+                    + ", current: "
+                    + current.getSpec());
+
             return;
           }
         }

@@ -21,10 +21,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import oracle.kubernetes.operator.helpers.ClientPool;
 import oracle.kubernetes.operator.helpers.Pool;
+import oracle.kubernetes.operator.logging.LoggingFacade;
+import oracle.kubernetes.operator.logging.LoggingFactory;
 import oracle.kubernetes.weblogic.domain.v2.Domain;
 import oracle.kubernetes.weblogic.domain.v2.api.WeblogicApi;
 
 public class WatchBuilder {
+  private static final LoggingFacade LOGGER = LoggingFactory.getLogger("Operator", "Operator");
+
   /** Always true for watches. */
   private static final boolean WATCH = true;
 
@@ -291,6 +295,14 @@ public class WatchBuilder {
                 null);
       } catch (ApiException e) {
         throw new UncheckedApiException(e);
+      } finally {
+        // OpenShift TEST
+        // validate that watches continue to be restarted
+        LOGGER.severe(
+            "OpenShift Testing: Domain watch, resourceVersion: "
+                + callParams.getResourceVersion()
+                + ", timeout: "
+                + callParams.getTimeoutSeconds());
       }
     }
   }

@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import oracle.kubernetes.operator.ProcessingConstants;
+import oracle.kubernetes.operator.logging.LoggingFacade;
+import oracle.kubernetes.operator.logging.LoggingFactory;
 import oracle.kubernetes.operator.work.Fiber.CompletionCallback;
 import oracle.kubernetes.operator.work.Fiber.ExitCallback;
 
@@ -19,6 +21,8 @@ import oracle.kubernetes.operator.work.Fiber.ExitCallback;
  * in-flight.
  */
 public class FiberGate {
+  private static final LoggingFacade LOGGER = LoggingFactory.getLogger("Operator", "Operator");
+
   private final Engine engine;
   private final ConcurrentMap<String, Fiber> gateMap = new ConcurrentHashMap<String, Fiber>();
 
@@ -83,7 +87,18 @@ public class FiberGate {
     WaitForOldFiberStep wfofs;
     if (old != null) {
       if (old == PLACEHOLDER) {
-        if (gateMap.putIfAbsent(key, f) != null) {
+        Fiber existing;
+        if ((existing = gateMap.putIfAbsent(key, f)) != null) {
+
+          // OpenShift TEST
+          // validate that there is no stranded existing Fiber
+          // Note: existing Fiber may be valid... Need to look at Fiber processing
+          StringBuilder sb = new StringBuilder();
+          existing.writeBreadCrumb(sb);
+          LOGGER.severe(
+              "OpenShift Testing: Fiber not started because of *existing Fiber*, breadcrumb: "
+                  + sb.toString());
+
           return null;
         }
       } else if (!gateMap.replace(key, old, f)) {
