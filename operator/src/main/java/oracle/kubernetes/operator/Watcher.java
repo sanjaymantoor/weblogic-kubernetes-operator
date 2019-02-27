@@ -153,6 +153,16 @@ abstract class Watcher<T> {
           continue;
         }
 
+        // OpenShift TEST
+        // validate that error status is received
+        LOGGER.severe(
+            "OpenShift Testing: type: "
+                + item.type
+                + ", status: "
+                + (item.status != null ? item.status.toString() : "<none>")
+                + ", object: "
+                + (item.object != null ? item.object.toString() : "<none>"));
+
         if (isError(item)) {
           handleErrorResponse(item);
         } else {
