@@ -188,6 +188,10 @@ abstract class Watcher<T> {
   private void handleErrorResponse(Watch.Response<T> item) {
     V1Status status = item.status;
     if (status != null && status.getCode() == HTTP_GONE) {
+      // OpenShift TEST
+      // validate that Gone messages are received
+      LOGGER.severe("OpenShift Testing: HTTP_GONE, msg: " + status.getMessage());
+
       String message = status.getMessage();
       int index1 = message.indexOf('(');
       if (index1 > 0) {
@@ -195,6 +199,10 @@ abstract class Watcher<T> {
         if (index2 > 0) {
           String val = message.substring(index1 + 1, index2);
           resourceVersion = !isNullOrEmptyString(val) ? Long.parseLong(val) : 0;
+
+          // OpenShift TEST
+          // validate that Gone message resource versions are processed
+          LOGGER.severe("OpenShift Testing: HTTP_GONE, resourceVersion: " + resourceVersion);
         }
       }
     }
