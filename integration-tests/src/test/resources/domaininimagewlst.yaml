@@ -3,7 +3,7 @@
 
 domainUID: domaininimagewlst
 namespace: test1
-configuredManagedServerCount: 4
+configuredManagedServerCount: 10
 initialManagedServerReplicas: 2
 exposeAdminT3Channel: true
 exposeAdminNodePort: true

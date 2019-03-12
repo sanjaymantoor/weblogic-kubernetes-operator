@@ -289,7 +289,7 @@ public class BaseTest {
     String domainUid = domain.getDomainUid();
     String domainNS = domainMap.get("namespace").toString();
     String managedServerNameBase = domainMap.get("managedServerNameBase").toString();
-    int replicas = 3;
+    int replicas = 10;
     String podName = domain.getDomainUid() + "-" + managedServerNameBase + replicas;
     String clusterName = domainMap.get("clusterName").toString();
 
