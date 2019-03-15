@@ -5,7 +5,6 @@
 package oracle.kubernetes.operator;
 
 import io.kubernetes.client.ApiException;
-import io.kubernetes.client.models.V1ObjectMeta;
 import io.kubernetes.client.models.V1Service;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
@@ -53,37 +52,33 @@ public class ServiceWatcher extends Watcher<V1Service> {
   }
 
   static String getServiceDomainUID(V1Service service) {
-    V1ObjectMeta meta = service.getMetadata();
-    Map<String, String> labels = meta.getLabels();
-    if (labels != null) {
-      return labels.get(LabelConstants.DOMAINUID_LABEL);
+    Map<String, String> selector = service.getSpec().getSelector();
+    if (selector != null) {
+      return selector.get(LabelConstants.DOMAINUID_LABEL);
     }
     return null;
   }
 
   static String getServiceServerName(V1Service service) {
-    V1ObjectMeta meta = service.getMetadata();
-    Map<String, String> labels = meta.getLabels();
-    if (labels != null) {
-      return labels.get(LabelConstants.SERVERNAME_LABEL);
+    Map<String, String> selector = service.getSpec().getSelector();
+    if (selector != null) {
+      return selector.get(LabelConstants.SERVERNAME_LABEL);
     }
     return null;
   }
 
   static String getServiceChannelName(V1Service service) {
-    V1ObjectMeta meta = service.getMetadata();
-    Map<String, String> labels = meta.getLabels();
-    if (labels != null) {
-      return labels.get(LabelConstants.CHANNELNAME_LABEL);
+    Map<String, String> selector = service.getSpec().getSelector();
+    if (selector != null) {
+      return selector.get(LabelConstants.CHANNELNAME_LABEL);
     }
     return null;
   }
 
   static String getServiceClusterName(V1Service service) {
-    V1ObjectMeta meta = service.getMetadata();
-    Map<String, String> labels = meta.getLabels();
-    if (labels != null) {
-      return labels.get(LabelConstants.CLUSTERNAME_LABEL);
+    Map<String, String> selector = service.getSpec().getSelector();
+    if (selector != null) {
+      return selector.get(LabelConstants.CLUSTERNAME_LABEL);
     }
     return null;
   }

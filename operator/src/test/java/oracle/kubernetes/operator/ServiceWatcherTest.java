@@ -14,9 +14,9 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.google.common.collect.ImmutableMap;
 import io.kubernetes.client.models.V1ObjectMeta;
 import io.kubernetes.client.models.V1Service;
+import io.kubernetes.client.models.V1ServiceSpec;
 import io.kubernetes.client.util.Watch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import oracle.kubernetes.operator.builders.StubWatchFactory;
@@ -60,7 +60,7 @@ public class ServiceWatcherTest extends WatcherTestBase implements WatchListener
 
   @Test
   public void whenServiceHasNoDomainUid_returnNull() throws Exception {
-    V1Service service = new V1Service().metadata(new V1ObjectMeta());
+    V1Service service = new V1Service().spec(new V1ServiceSpec());
 
     assertThat(ServiceWatcher.getServiceDomainUID(service), nullValue());
   }
@@ -68,15 +68,14 @@ public class ServiceWatcherTest extends WatcherTestBase implements WatchListener
   @Test
   public void whenServiceHasDomainUid_returnIt() throws Exception {
     V1Service service =
-        new V1Service()
-            .metadata(new V1ObjectMeta().labels(ImmutableMap.of(DOMAINUID_LABEL, "domain1")));
+        new V1Service().spec(new V1ServiceSpec().putSelectorItem(DOMAINUID_LABEL, "domain1"));
 
     assertThat(ServiceWatcher.getServiceDomainUID(service), equalTo("domain1"));
   }
 
   @Test
   public void whenServiceHasNoServerName_returnNull() throws Exception {
-    V1Service service = new V1Service().metadata(new V1ObjectMeta());
+    V1Service service = new V1Service().spec(new V1ServiceSpec());
 
     assertThat(ServiceWatcher.getServiceServerName(service), nullValue());
   }
@@ -84,15 +83,14 @@ public class ServiceWatcherTest extends WatcherTestBase implements WatchListener
   @Test
   public void whenServiceHasServerName_returnIt() throws Exception {
     V1Service service =
-        new V1Service()
-            .metadata(new V1ObjectMeta().labels(ImmutableMap.of(SERVERNAME_LABEL, "myserver")));
+        new V1Service().spec(new V1ServiceSpec().putSelectorItem(SERVERNAME_LABEL, "myserver"));
 
     assertThat(ServiceWatcher.getServiceServerName(service), equalTo("myserver"));
   }
 
   @Test
   public void whenServiceHasNoChannelName_returnNull() throws Exception {
-    V1Service service = new V1Service().metadata(new V1ObjectMeta());
+    V1Service service = new V1Service().spec(new V1ServiceSpec());
 
     assertThat(ServiceWatcher.getServiceChannelName(service), nullValue());
   }
@@ -100,8 +98,7 @@ public class ServiceWatcherTest extends WatcherTestBase implements WatchListener
   @Test
   public void whenServiceHasChannelName_returnIt() throws Exception {
     V1Service service =
-        new V1Service()
-            .metadata(new V1ObjectMeta().labels(ImmutableMap.of(CHANNELNAME_LABEL, "channel1")));
+        new V1Service().spec(new V1ServiceSpec().putSelectorItem(CHANNELNAME_LABEL, "channel1"));
 
     assertThat(ServiceWatcher.getServiceChannelName(service), equalTo("channel1"));
   }

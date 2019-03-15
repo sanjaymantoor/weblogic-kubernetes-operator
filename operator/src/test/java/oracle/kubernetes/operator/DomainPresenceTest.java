@@ -37,6 +37,7 @@ import io.kubernetes.client.models.V1Pod;
 import io.kubernetes.client.models.V1PodList;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
+import io.kubernetes.client.models.V1ServiceSpec;
 import io.kubernetes.client.models.V1Status;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -214,7 +215,12 @@ public class DomainPresenceTest extends ThreadFactoryTestBase {
       String uid, String namespace, String serverName, String channelName) {
     V1ObjectMeta metadata = createServerMetadata(uid, namespace, serverName);
     metadata.putLabelsItem(CHANNELNAME_LABEL, channelName);
-    return new V1Service().metadata(metadata);
+    V1Service service = new V1Service().metadata(metadata);
+    service.spec(
+        new V1ServiceSpec()
+            .selector(createMap(DOMAINUID_LABEL, uid, SERVERNAME_LABEL, serverName)));
+    service.getSpec().putSelectorItem(CHANNELNAME_LABEL, channelName);
+    return service;
   }
 
   private V1ObjectMeta createMetadata(String uid, String namespace, String name) {
@@ -267,7 +273,11 @@ public class DomainPresenceTest extends ThreadFactoryTestBase {
   }
 
   private V1Service createService(String uid, String namespace, String serverName) {
-    return new V1Service().metadata(createServerMetadata(uid, namespace, serverName));
+    V1Service service = new V1Service().metadata(createServerMetadata(uid, namespace, serverName));
+    service.spec(
+        new V1ServiceSpec()
+            .selector(createMap(DOMAINUID_LABEL, uid, SERVERNAME_LABEL, serverName)));
+    return service;
   }
 
   @Test
